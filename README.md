@@ -10,10 +10,11 @@ Part 1: Using sd.cpp as a library
 First, I tried calling the stable-diffusion.cpp library from a simple C++ program (which just loads the model and renders an image). Via dynamic linking. That worked, and its performance was the same as the example sd.exe CLI, and it detected and used the GPU correctly.
 
 The basic commands for this were (using MinGW64):
-
+```
 gendef stable-diffusion.dll
 dlltool --dllname stable-diffusion.dll --output-lib libstable-diffusion.a --input-def stable-diffusion.def
 g++ -o your_program your_program.cpp -L. -lstable-diffusion
+```
 And I had to set a CMAKE_GENERATOR="MinGW Makefiles" environment variable. The steps will be different if using MSVC's cl.exe.
 
 I figured that I could write a simple HTTP server in C++ that wraps sd.cpp. Using a different language would involve keeping the language binding up-to-date with sd.cpp's header file. For e.g. the Go-lang wrapper is currently out-of-date with sd.cpp's latest header.
@@ -21,7 +22,7 @@ I figured that I could write a simple HTTP server in C++ that wraps sd.cpp. Usin
 This thin-wrapper C++ server wouldn't be too complex, it would just act as a rendering backend process for a more complex Go-lang based server (which would implement other user-facing features like model management, task queue management etc).
 
 Here's a simple C++ example:
-
+```
 #include "stable-diffusion.h"
 #include <iostream>
 
@@ -53,6 +54,7 @@ int main() {
      
     return 0;
 }
+```
 Part 2: Compiling sd.cpp from scratch (as a sub-folder in my project)
 Update: This code is now available in a github repo.
 
@@ -61,12 +63,13 @@ The next experiment was to compile sd.cpp from scratch on my PC (using the MinGW
 I needed this initially to investigate a segfault inside a function of stable-diffusion.dll, which I wasn't able to trace (even with gdb). Plus it was fun to compile the entire thing and see the entire Stable Diffusion implementation fit into a tiny binary that starts up really quickly. A few megabytes for the CPU-only build.
 
 My folder tree was:
-
+```
 - stable-diffusion.cpp # sub-module dir
 - src/main.cpp
 - CMakeLists.txt
 src/main.cpp is the same as before, except for this change at the start of int main() (in order to capture the logs):
-
+```
+```
 void sd_log_cb(enum sd_log_level_t level, const char* log, void* data) {
     std::cout << log;
 }
@@ -76,8 +79,9 @@ int main(int argc, char* argv[]) {
 
     // ... rest of the code is the same
 }
+```
 And CMakeLists.txt is:
-
+```
 cmake_minimum_required(VERSION 3.13)
 project(sd2)
 
@@ -96,10 +100,12 @@ add_executable(sd2 src/main.cpp)
 
 # Link with the stable-diffusion library
 target_link_libraries(sd2 stable-diffusion)
+```
 Compiled using:
-
+```
 cmake
 cmake --build . --config Release
+```
 This ran on the CPU, and was obviously slow. But good to see it running!
 
 Tiny note: I noticed that compiling with g++ (mingw64) resulted in faster iterations/sec compared to MSVC. For e.g. 3.5 sec/it vs 4.5 sec/it for SD 1.5 (euler_a, 256x256, fp32). Not sure why.
@@ -108,9 +114,10 @@ Part 3: Compiling the CUDA version of sd.cpp
 Just for the heck of it, I also installed the CUDA Toolkit and compiled the cuda version of my example project. That took some fiddling. I had to copy some files around to make it work, and point the CUDAToolkit_ROOT environment variable to where the CUDA toolkit was installed (for e.g. C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6).
 
 Compiled using:
-
+```
 cmake -DSD_CUBLAS=ON
 cmake --build . --config Release
+```
 The compilation took a long time, since it compiled all the cuda kernels inside ggml. But it worked, and was as fast as the official sd.exe build for CUDA (which confirmed that nothing was misconfigured).
 
 It resulted in a 347 MB binary (which compresses to a 71 MB .7z file for download). That's really good, compared to the 6 GB+ (uncompressed) behemoths in python-land for Stable Diffusion. Even including the CUDA DLLs (that are needed separately) that's "only" another 600 MB uncompressed (300 MB .7z compressed), which is still better.
