@@ -1,0 +1,162 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default Config",
+            "description": "Default build configuration",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_SSL": "OFF"
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "Debug Config",
+            "description": "Debug build with symbols",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ENABLE_SSL": "OFF"
+            }
+        },
+        {
+            "name": "release-ssl",
+            "displayName": "Release with SSL",
+            "description": "Release build with SSL/TLS support",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-ssl",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_SSL": "ON"
+            }
+        },
+        {
+            "name": "windows-mingw",
+            "displayName": "Windows MinGW",
+            "description": "Windows build with MinGW",
+            "generator": "MinGW Makefiles",
+            "binaryDir": "${sourceDir}/build-mingw",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_C_COMPILER": "gcc",
+                "ENABLE_SSL": "OFF"
+            }
+        },
+        {
+            "name": "windows-vs2022",
+            "displayName": "Windows Visual Studio 2022",
+            "description": "Windows build with Visual Studio 2022",
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "${sourceDir}/build-vs2022",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_SSL": "OFF"
+            }
+        },
+        {
+            "name": "linux-gcc",
+            "displayName": "Linux GCC",
+            "description": "Linux build with GCC",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-linux",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_POSITION_INDEPENDENT_CODE": "ON",
+                "ENABLE_SSL": "OFF"
+            }
+        },
+        {
+            "name": "macos",
+            "displayName": "macOS",
+            "description": "macOS build with Clang",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-macos",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_OSX_DEPLOYMENT_TARGET": "10.15",
+                "ENABLE_SSL": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default",
+            "displayName": "Default Build",
+            "description": "Build with default configuration"
+        },
+        {
+            "name": "debug",
+            "configurePreset": "debug",
+            "displayName": "Debug Build",
+            "description": "Build debug version"
+        },
+        {
+            "name": "release-ssl",
+            "configurePreset": "release-ssl",
+            "displayName": "Release with SSL",
+            "description": "Build release version with SSL"
+        },
+        {
+            "name": "windows-mingw",
+            "configurePreset": "windows-mingw",
+            "displayName": "Windows MinGW Build",
+            "description": "Build for Windows with MinGW"
+        },
+        {
+            "name": "windows-vs2022",
+            "configurePreset": "windows-vs2022",
+            "displayName": "Windows VS2022 Build",
+            "description": "Build for Windows with Visual Studio 2022"
+        },
+        {
+            "name": "linux-gcc",
+            "configurePreset": "linux-gcc",
+            "displayName": "Linux GCC Build",
+            "description": "Build for Linux with GCC"
+        },
+        {
+            "name": "macos",
+            "configurePreset": "macos",
+            "displayName": "macOS Build",
+            "description": "Build for macOS"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default",
+            "displayName": "Default Tests",
+            "description": "Run tests with default configuration"
+        }
+    ]
+}
