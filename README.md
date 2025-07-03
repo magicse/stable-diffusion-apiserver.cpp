@@ -28,7 +28,7 @@ sd_server/
 ├── httplib/                      # Header-only HTTP library
 ```
 
-### Linux/macOS
+### Linux
 ```bash
 git clone --recurse-submodules https://github.com/magicse/stable-diffusion-apiserver.cpp.git
 cd sd_server
