@@ -52,7 +52,7 @@ class StableDiffusionClient:
         
         return False
 
-    def generate_image(self, prompt, negative_prompt="", width=512, height=512, 
+    def generate_image_old(self, prompt, negative_prompt="", width=512, height=512, 
                       steps=20, cfg_scale=7.0, seed=-1, save_path=None):
         """
         Generate an image
@@ -126,6 +126,61 @@ class StableDiffusionClient:
             print(f"Request error: {e}")
             return None
 
+    def generate_image(self, prompt, negative_prompt="", width=512, height=512, 
+                       steps=20, cfg_scale=7.0, seed=-1, batch_count=1, save_path=None):
+        payload = {
+            "prompt": prompt,
+            "negative_prompt": negative_prompt,
+            "width": width,
+            "height": height,
+            "steps": steps,
+            "cfg_scale": cfg_scale,
+            "seed": seed,
+            "batch_count": batch_count
+        }
+
+        print(f"Sending generation request...")
+        print(f"Prompt: {prompt}")
+
+        try:
+            response = requests.post(
+                f"{self.server_url}/generate",
+                json=payload,
+                headers={"Content-Type": "application/json"}
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("success"):
+                    filenames = result.get("filenames")
+                    if not filenames:
+                        print("Server didnt reyurn files names.")
+                        return None
+                    
+                    saved_paths = []
+
+                    for i, filename in enumerate(filenames):
+                        image_response = requests.get(f"{self.server_url}/image/{filename}")
+                        if image_response.status_code == 200:
+                            output_path = Path(save_path) if save_path and batch_count == 1 else Path(f"{Path(save_path).stem}_{i}.png") if save_path else Path(filename)
+                            with open(output_path, 'wb') as f:
+                                f.write(image_response.content)
+                            print(f"Image saved: {output_path}")
+                            saved_paths.append(str(output_path))
+                        else:
+                            print(f"Download error: {image_response.status_code} для {filename}")
+                    
+                    return saved_paths
+                else:
+                    print(f"Generation error: {result}")
+            else:
+                print(f"HTTP error: {response.status_code}")
+                print(f"Response: {response.text}")
+        except Exception as e:
+            print(f"Request error: {e}")
+        
+        return None
+
 def main():
     parser = argparse.ArgumentParser(description="Stable Diffusion HTTP API Client")
     parser.add_argument("--server", default="http://localhost:8080", 
@@ -150,6 +205,8 @@ def main():
                        help="Check server status")
     parser.add_argument("--load_model", 
                        help="Path to the .safetensors model file to load")                       
+    parser.add_argument("--batch", type=int, default=1,
+                        help="batch count") 
     
     args = parser.parse_args()
     
